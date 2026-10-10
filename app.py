@@ -5,7 +5,7 @@ from docx import Document
 
 # --- CẤU HÌNH TRANG WEB ---
 st.set_page_config(
-    page_title="Trợ Lý AI Soạn Giảng & Đề Thi CV 7991",
+    page_title="Trợ Lý AI CV 7991 & CV 5512",
     page_icon="📚",
     layout="wide",
 )
@@ -13,18 +13,11 @@ st.set_page_config(
 st.title("📚 Trợ Lý AI Xuất Bản Kế Hoạch Bài Dạy & Bài Kiểm Tra")
 st.caption("Đúng chuẩn cấu trúc Công văn 7991/BGDĐT-GDTrH & Công văn 5512/BGDĐT-GDTrH")
 
-# --- SIDEBAR: CẤU HÌNH API KEY ---
-with st.sidebar:
-    st.header("🔑 Cấu Hình Hệ Thống")
-    api_key = st.text_input("Nhập Gemini API Key của bạn:", type="password")
-    st.markdown("---")
-    st.markdown("### 📌 Chuẩn cấu trúc CV 7991:")
-    st.markdown("""
-    - **Phần I:** Trắc nghiệm nhiều lựa chọn (3,0đ)
-    - **Phần II:** Trắc nghiệm Đúng/Sai (2,0đ - 4 ý a,b,c,d)
-    - **Phần III:** Câu hỏi trả lời ngắn (2,0đ)
-    - **Nhận thức:** 40% Nhận biết - 30% Thông hiểu - 30% Vận dụng.
-    """)
+# --- LẤY API KEY ẨN TỪ SECRETS CỦA STREAMLIT CLOUD ---
+try:
+    GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+except Exception:
+    GOOGLE_API_KEY = None
 
 # --- GIAO DIỆN NHẬP LIỆU CHÍNH ---
 with st.form("main_form"):
@@ -33,7 +26,7 @@ with st.form("main_form"):
     with col1:
         subject = st.selectbox(
             "📖 Môn học",
-            ["Toán", "Ngữ văn", "Tiếng Anh", "Khoa học tự nhiên", "Vật lý", "Hóa học", "Sinh học", "Lịch sử và Địa lí", "Giáo dục công dân / Kinh tế & Pháp luật", "Tin học", "Công nghệ"]
+            ["Toán", "Ngữ văn", "Tiếng Anh", "Khoa học tự nhiên", "Vật lý", "Hóa học", "Sinh học", "Lịch sử và Địa lí", "Tin học", "Công nghệ"]
         )
         grade = st.selectbox(
             "🏫 Khối lớp",
@@ -64,7 +57,7 @@ with st.form("main_form"):
 # --- HÀM TẠO FILE WORD (.DOCX) ---
 def export_to_word(text_content):
     doc = Document()
-    doc.add_heading("TÀI LIỆU GIÁO DỤC - CHUẨN CÔNG VĂN BỘ GD&ĐT", level=0)
+    doc.add_heading("TÀI LIỆU GIÁO DỤC - CHUẨN CÔNG VẤN BGDĐT", level=0)
     
     for paragraph in text_content.split("\n"):
         p_clean = paragraph.strip()
@@ -86,35 +79,35 @@ def export_to_word(text_content):
     buffer.seek(0)
     return buffer
 
-# --- XỬ LÝ KHI BẤM NÚT ---
+# --- XỬ LÝ KHI BẤM NÚT GỌI AI THẬT ---
 if submit_btn:
-    if not api_key:
-        st.error("⚠️ Vui lòng nhập Gemini API Key ở thanh bên trái!")
+    if not GOOGLE_API_KEY:
+        st.error("⚠️ Hệ thống chưa cấu hình API Key ở mục Secrets trên Streamlit Cloud!")
     elif not lesson_title:
         st.error("⚠️ Vui lòng điền tên bài học / chủ đề!")
     else:
         try:
-            genai.configure(api_key=api_key)
+            genai.configure(api_key=GOOGLE_API_KEY)
             model = genai.GenerativeModel("gemini-1.5-pro")
 
             prompt = f"""
-            Bạn là một chuyên gia soạn thảo đề thi và giáo án cấp THCS/THPT theo quy định của Bộ Giáo dục và Đào tạo Việt Nam.
-            Hãy xây dựng sản phẩm chuyên môn cho môn {subject}, {grade}, bộ sách {book}, bài/chủ đề: "{lesson_title}".
+            Bạn là một chuyên gia giáo dục phổ thông xuất sắc tại Việt Nam.
+            Hãy soạn thảo tài liệu chuyên môn cho môn {subject}, {grade}, bộ sách {book}, thời lượng {duration} tiết.
+            Bài học / Chủ đề: "{lesson_title}".
 
-            Thực hiện chính xác các yêu cầu được chọn sau:
+            Yêu cầu thực hiện chính xác các nội dung được chọn sau:
             """
 
             if "Đề kiểm tra định kỳ + Ma trận & Bản đặc tả (Chuẩn CV 7991)" in export_type:
                 prompt += """
                 1. ĐỀ KIỂM TRA ĐỊNH KỲ VÀ MA TRẬN, BẢN ĐẶC TẢ (TUÂN THỦ CHÍNH XÁC CÔNG VĂN 7991/BGDĐT-GDTrH):
-                   A. Khung Ma trận & Bản đặc tả đề kiểm tra:
+                   A. Khung Ma trận & Bản đặc tả:
                       - Tỉ lệ mức độ nhận thức: 40% Nhận biết - 30% Thông hiểu - 30% Vận dụng.
-                   B. Đề kiểm tra (Gồm đúng 3 phần theo định dạng chuẩn CV 7991):
-                      - PHẦN I: Trắc nghiệm nhiều lựa chọn (4 phương án A, B, C, D - Duy nhất 1 phương án đúng).
-                      - PHẦN II: Trắc nghiệm Đúng - Sai (Gồm các câu hỏi lớn, mỗi câu gồm 4 ý a, b, c, d yêu cầu học sinh nhận định Đúng hoặc Sai).
-                      - PHẦN III: Câu hỏi trả lời ngắn (Học sinh tính toán/suy luận và điền kết quả ngắn gọn).
-                   C. Đáp án & Hướng dẫn chấm chi tiết:
-                      - Quy tắc tính điểm chi tiết cho từng phần.
+                   B. Đề kiểm tra (Đúng định dạng 3 phần theo CV 7991):
+                      - PHẦN I: Trắc nghiệm nhiều lựa chọn (4 phương án A, B, C, D - Khoảng 8-12 câu).
+                      - PHẦN II: Trắc nghiệm Đúng - Sai (Gồm các câu lớn, mỗi câu có 4 ý a, b, c, d).
+                      - PHẦN III: Câu hỏi trả lời ngắn (Điền kết quả ngắn gọn).
+                   C. Đáp án & Hướng dẫn chấm chi tiết.
                 """
 
             if "Kế hoạch bài dạy / Giáo án (Chuẩn CV 5512)" in export_type:
@@ -122,25 +115,22 @@ if submit_btn:
                 2. KẾ HOẠCH BÀI DẠY (TUÂN THỦ CÔNG VĂN 5512/BGDĐT-GDTrH):
                    - I. MỤC TIÊU (Kiến thức, Năng lực, Phẩm chất).
                    - II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU.
-                   - III. TIẾN TRÌNH DẠY HỌC (4 hoạt động: Khởi động, Hình thành kiến thức mới, Luyện tập, Vận dụng).
-                   (Mỗi hoạt động phải trình bày đủ 4 bước: Mục tiêu, Nội dung, Sản phẩm, Tổ chức thực hiện).
+                   - III. TIẾN TRÌNH DẠY HỌC (4 hoạt động: Khởi động, Hình thành kiến thức mới, Luyện tập, Vận dụng; mỗi hoạt động đủ 4 bước: Mục tiêu, Nội dung, Sản phẩm, Tổ chức thực hiện).
                 """
 
             if "Kịch bản Slide bài giảng (PowerPoint)" in export_type:
                 prompt += """
                 3. KỊCH BẢN SLIDE BÀI GIẢNG (POWERPOINT):
-                   - Chia rõ từng Slide (Trang 1, Trang 2,...): Tiêu đề, Nội dung hiển thị, Ghi chú giáo viên.
+                   - Chia rõ từng Slide: Tiêu đề, Nội dung hiển thị, Ghi chú giáo viên.
                 """
 
-            prompt += "\nĐịnh dạng đầu ra rõ ràng, chuẩn văn phong sư phạm bằng tiếng Việt."
+            prompt += "\nTrình bày rõ ràng, chuẩn văn phong sư phạm bằng tiếng Việt."
 
-            with st.spinner("🔄 AI đang khởi tạo ma trận, bản đặc tả và đề thi chuẩn CV 7991..."):
+            with st.spinner("🔄 AI đang phân tích chương trình và sinh nội dung chuẩn CV 7991..."):
                 response = model.generate_content(prompt)
                 output_text = response.text
 
-            st.success("✅ Đã khởi tạo thành công tài liệu!")
-            
-            # Hiển thị trên màn hình
+            st.success("✅ Đã xuất bản thành công tài liệu từ AI!")
             st.markdown("---")
             st.markdown(output_text)
 
@@ -156,4 +146,4 @@ if submit_btn:
             )
 
         except Exception as e:
-            st.error(f"❌ Có lỗi xảy ra: {str(e)}")
+            st.error(f"❌ Có lỗi xảy ra khi gọi AI: {str(e)}")
