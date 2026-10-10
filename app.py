@@ -89,7 +89,7 @@ if submit_btn:
         try:
             genai.configure(api_key=GOOGLE_API_KEY)
             # Sử dụng model gemini-1.5-flash chuẩn ổn định
-            model = genai.GenerativeModel("gemini-2.5-flash")
+            model = genai.GenerativeModel("gemini-3.8-flash")
 
             prompt = f"""
             Bạn là một chuyên gia giáo dục phổ thông xuất sắc tại Việt Nam.
